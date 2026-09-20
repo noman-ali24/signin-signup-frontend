@@ -5,8 +5,10 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  StyleProp,
   StyleSheet,
   View,
+  ViewStyle,
 } from 'react-native';
 import { BackgroundPattern } from './BackgroundPattern';
 import { COLORS } from '../constants/colors';
@@ -14,11 +16,13 @@ import { COLORS } from '../constants/colors';
 interface ScreenWrapperProps {
   children: React.ReactNode;
   scrollable?: boolean;
+  contentContainerStyle?: StyleProp<ViewStyle>;
 }
 
 export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   children,
   scrollable = true,
+  contentContainerStyle,
 }) => {
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -32,14 +36,14 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
         >
           {scrollable ? (
             <ScrollView
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
               {children}
             </ScrollView>
           ) : (
-            <View style={styles.scrollContent}>{children}</View>
+            <View style={[styles.scrollContent, contentContainerStyle]}>{children}</View>
           )}
         </KeyboardAvoidingView>
       </View>

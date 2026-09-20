@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -44,8 +44,8 @@ export const SignUpScreen: React.FC = () => {
   };
 
   return (
-    <ScreenWrapper>
-      <View>
+    <ScreenWrapper contentContainerStyle={styles.screenContent}>
+      <View style={styles.contentContainer}>
         <BrandHeader title="Sign Up" subtitle="Car towing & transport app." />
 
         <CustomInput
@@ -72,19 +72,57 @@ export const SignUpScreen: React.FC = () => {
           icon={<MailIcon size={20} color={COLORS.primary} />}
           error={errors.email}
         />
-      </View>
 
-      {/* Bottom Button */}
-      <View style={styles.bottomContainer}>
-        <CustomButton title="Next" onPress={handleNext} />
+        <View style={styles.bottomContainer}>
+          <CustomButton title="Next" onPress={handleNext} />
+        </View>
+
+        <View style={styles.footerContainer}>
+          <View style={styles.promptRow}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate(ROUTES.SIGN_IN)}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <Text style={styles.signInLink}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    marginTop: 40,
+  screenContent: {
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  contentContainer: {
     width: '100%',
+    justifyContent: 'center',
+  },
+  bottomContainer: {
+    marginTop: 12,
+    width: '100%',
+  },
+  footerContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingBottom: 4,
+  },
+  promptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    fontWeight: '400',
+  },
+  signInLink: {
+    fontSize: 13,
+    color: COLORS.primary,
+    fontWeight: '700',
   },
 });

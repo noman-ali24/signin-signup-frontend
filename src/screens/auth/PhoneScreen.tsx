@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -42,8 +42,8 @@ export const PhoneScreen: React.FC = () => {
   };
 
   return (
-    <ScreenWrapper>
-      <View>
+    <ScreenWrapper contentContainerStyle={styles.screenContent}>
+      <View style={styles.contentContainer}>
         <BrandHeader title="Phone Number" subtitle="Car towing & transport app." />
 
         <CustomInput
@@ -58,19 +58,45 @@ export const PhoneScreen: React.FC = () => {
           icon={<PhoneIcon size={20} color={COLORS.primary} />}
           error={error}
         />
-      </View>
 
-      {/* Bottom Button */}
-      <View style={styles.bottomContainer}>
-        <CustomButton title="Next" onPress={handleNext} />
+        <View style={styles.bottomContainer}>
+          <CustomButton title="Next" onPress={handleNext} />
+        </View>
+
+        <View style={styles.footerContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.backLink}>← Back</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  bottomContainer: {
-    marginTop: 40,
+  screenContent: {
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  contentContainer: {
     width: '100%',
+    justifyContent: 'center',
+  },
+  bottomContainer: {
+    marginTop: 12,
+    width: '100%',
+  },
+  footerContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingBottom: 4,
+  },
+  backLink: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
 });

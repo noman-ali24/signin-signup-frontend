@@ -71,8 +71,8 @@ export const SignInScreen: React.FC = () => {
   };
 
   return (
-    <ScreenWrapper>
-      <View>
+    <ScreenWrapper contentContainerStyle={styles.screenContent}>
+      <View style={styles.contentContainer}>
         <BrandHeader title="Sign In" subtitle="Car towing & transport app." />
 
         {/* Input Fields */}
@@ -116,40 +116,48 @@ export const SignInScreen: React.FC = () => {
           onFacebookPress={() => handleSocialLogin('Facebook')}
           onInstagramPress={() => handleSocialLogin('Instagram')}
         />
-      </View>
 
-      {/* Bottom Links */}
-      <View style={styles.footerContainer}>
-        <View style={styles.signupPromptRow}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+        {/* Bottom Links */}
+        <View style={styles.footerContainer}>
+          <View style={styles.signupPromptRow}>
+            <Text style={styles.footerText}>Don't have an account? </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate(ROUTES.SIGN_UP_STEP_1)}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
+              <Text style={styles.signUpLink}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
-            onPress={() => navigation.navigate(ROUTES.SIGN_UP_STEP_1)}
-            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}
+            style={styles.forgotPasswordButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.signUpLink}>Sign Up</Text>
+            <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}
-          style={styles.forgotPasswordButton}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
-        </TouchableOpacity>
       </View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
+  screenContent: {
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  contentContainer: {
+    width: '100%',
+    justifyContent: 'center',
+  },
   signInButton: {
     marginTop: 8,
   },
   footerContainer: {
     alignItems: 'center',
-    marginTop: 16,
-    paddingBottom: 8,
+    marginTop: 20,
+    paddingBottom: 4,
   },
   signupPromptRow: {
     flexDirection: 'row',

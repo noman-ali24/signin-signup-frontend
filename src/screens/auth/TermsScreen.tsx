@@ -81,8 +81,8 @@ export const TermsScreen: React.FC = () => {
   };
 
   return (
-    <ScreenWrapper>
-      <View>
+    <ScreenWrapper contentContainerStyle={styles.screenContent}>
+      <View style={styles.contentContainer}>
         <BrandHeader title="Terms & Conditions" subtitle="Car towing & transport app." />
 
         <View style={styles.sectionContainer}>
@@ -110,21 +110,37 @@ export const TermsScreen: React.FC = () => {
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
-      </View>
 
-      {/* Bottom Button */}
-      <View style={styles.bottomContainer}>
-        <CustomButton
-          title="Sign Up"
-          onPress={handleSignUp}
-          loading={loading}
-        />
+        <View style={styles.bottomContainer}>
+          <CustomButton
+            title="Sign Up"
+            onPress={handleSignUp}
+            loading={loading}
+          />
+        </View>
+
+        <View style={styles.footerContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.backLink}>← Back</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
+  screenContent: {
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  contentContainer: {
+    width: '100%',
+    justifyContent: 'center',
+  },
   sectionContainer: {
     marginTop: 8,
     width: '100%',
@@ -182,7 +198,17 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
   },
   bottomContainer: {
-    marginTop: 40,
+    marginTop: 24,
     width: '100%',
+  },
+  footerContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    paddingBottom: 4,
+  },
+  backLink: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
   },
 });

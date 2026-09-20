@@ -46,8 +46,8 @@ export const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <ScreenWrapper>
-      <View>
+    <ScreenWrapper contentContainerStyle={styles.screenContent}>
+      <View style={styles.contentContainer}>
         <BrandHeader
           title="Reset Password"
           subtitle="Enter your email to receive recovery instructions."
@@ -72,27 +72,36 @@ export const ForgotPasswordScreen: React.FC = () => {
           loading={loading}
           style={styles.actionButton}
         />
-      </View>
 
-      <View style={styles.footerContainer}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate(ROUTES.SIGN_IN)}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Text style={styles.backLink}>← Back to Sign In</Text>
-        </TouchableOpacity>
+        <View style={styles.footerContainer}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate(ROUTES.SIGN_IN)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.backLink}>← Back to Sign In</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
+  screenContent: {
+    justifyContent: 'center',
+    paddingVertical: 24,
+  },
+  contentContainer: {
+    width: '100%',
+    justifyContent: 'center',
+  },
   actionButton: {
     marginTop: 12,
   },
   footerContainer: {
     alignItems: 'center',
-    marginTop: 32,
+    marginTop: 20,
+    paddingBottom: 4,
   },
   backLink: {
     fontSize: 14,
