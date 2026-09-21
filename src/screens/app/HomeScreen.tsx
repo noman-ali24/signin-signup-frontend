@@ -1,20 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
+  Platform,
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { ROUTES } from '../../constants/routes';
-import { COLORS } from '../../constants/colors';
-import { BrandLogo, UserIcon } from '../../assets/icons';
+import { MovcaPinLogo, HourglassIcon } from '../../assets/icons';
+import { BottomNavBar, NavTabType } from '../../components/BottomNavBar';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { logout } from '../../redux/slices/authSlice';
 
@@ -23,8 +24,10 @@ export const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
+  const [activeTab, setActiveTab] = useState<NavTabType>('home');
+
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+    Alert.alert('Sign Out', 'Do you want to log out of your account?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',
@@ -40,230 +43,162 @@ export const HomeScreen: React.FC = () => {
     ]);
   };
 
+  const handleTabChange = (tab: NavTabType) => {
+    setActiveTab(tab);
+    if (tab === 'profile') {
+      // Allow sign out from profile tab
+      Alert.alert(
+        'Account Profile',
+        `Logged in as: ${user?.name || 'User'}\nEmail: ${user?.email || 'user@autopulse.app'}`,
+        [
+          { text: 'OK', onPress: () => setActiveTab('home') },
+          {
+            text: 'Sign Out',
+            style: 'destructive',
+            onPress: handleLogout,
+          },
+        ]
+      );
+    }
+  };
+
+  // Capitalize name or fallback
+  const displayName = user?.name
+    ? user.name.charAt(0).toUpperCase() + user.name.slice(1)
+    : 'User';
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Top App Header */}
-        <View style={styles.header}>
+    <View style={styles.screenContainer}>
+      <StatusBar barStyle="light-content" />
+
+      {/* Top Petrol Header */}
+      <View style={styles.header}>
+        <SafeAreaView>
+          {/* Brand Logo Row */}
           <View style={styles.brandRow}>
-            <BrandLogo size={28} color={COLORS.primary} badgeColor={COLORS.surfaceWhite} />
-            <Text style={styles.brandName}>AUTOPULSE</Text>
+            <MovcaPinLogo size={28} color="#FFFFFF" carColor="#06252E" />
+            <Text style={styles.brandTitle}>AUTOPULSE</Text>
           </View>
 
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.logoutText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+          {/* User Welcome Message */}
+          <Text style={styles.welcomeTitle}>Welcome, {displayName}</Text>
+          <Text style={styles.subtitle}>AUTOPULSE, got u covered</Text>
+        </SafeAreaView>
+      </View>
 
-        {/* User Welcome Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <UserIcon size={32} color={COLORS.primary} />
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.welcomeLabel}>Welcome back,</Text>
-            <Text style={styles.userName}>{user?.name || 'Valued Member'}</Text>
-            <Text style={styles.userEmail}>{user?.email || 'authenticated@autopulse.app'}</Text>
-            {user?.phone ? <Text style={styles.userPhone}>{user.phone}</Text> : null}
-          </View>
-        </View>
+      {/* Center Account Review Section */}
+      <View style={styles.centerSection}>
+        {/* Circular Progress Gauge with Hourglass */}
+        <View style={styles.gaugeContainer}>
+          <Svg width={114} height={114} viewBox="0 0 114 114">
+            {/* Background Track Circle */}
+            <Circle
+              cx="57"
+              cy="57"
+              r="48"
+              stroke="#CBD2D5"
+              strokeWidth="11"
+              fill="#CBD2D5"
+            />
+            {/* Active Dark Petrol Progress Arc */}
+            <Circle
+              cx="57"
+              cy="57"
+              r="48"
+              stroke="#06252E"
+              strokeWidth="11"
+              fill="none"
+              strokeDasharray="301.6"
+              strokeDashoffset="175"
+              strokeLinecap="round"
+              transform="rotate(-90 57 57)"
+            />
+          </Svg>
 
-        {/* Status Badge */}
-        <View style={styles.statusCard}>
-          <View style={styles.statusDot} />
-          <View style={styles.statusTextContainer}>
-            <Text style={styles.statusTitle}>Dispatch Network Active</Text>
-            <Text style={styles.statusSubtitle}>
-              Connected to Golden Touch Technology 24/7 towing & recovery fleet.
-            </Text>
-          </View>
-        </View>
-
-        {/* Quick Action Cards */}
-        <Text style={styles.sectionTitle}>Transport Services</Text>
-
-        <View style={styles.servicesGrid}>
-          <View style={styles.serviceCard}>
-            <Text style={styles.serviceIcon}>🚛</Text>
-            <Text style={styles.serviceTitle}>Request Tow Truck</Text>
-            <Text style={styles.serviceDesc}>Flatbed & wheel-lift recovery on demand.</Text>
-          </View>
-
-          <View style={styles.serviceCard}>
-            <Text style={styles.serviceIcon}>📍</Text>
-            <Text style={styles.serviceTitle}>Live Transport GPS</Text>
-            <Text style={styles.serviceDesc}>Real-time vehicle transport tracking.</Text>
-          </View>
-
-          <View style={styles.serviceCard}>
-            <Text style={styles.serviceIcon}>🛡️</Text>
-            <Text style={styles.serviceTitle}>Roadside Assistance</Text>
-            <Text style={styles.serviceDesc}>Battery jumpstart, tire changes & lockout.</Text>
-          </View>
-
-          <View style={styles.serviceCard}>
-            <Text style={styles.serviceIcon}>📋</Text>
-            <Text style={styles.serviceTitle}>Service History</Text>
-            <Text style={styles.serviceDesc}>Past invoices, receipts and records.</Text>
+          {/* Centered Vector Hourglass */}
+          <View style={styles.hourglassWrapper}>
+            <HourglassIcon size={36} color="#06252E" />
           </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        {/* Status Text */}
+        <Text style={styles.reviewText}>Your account is under Review</Text>
+      </View>
+
+      {/* Floating Bottom Navigation Bar */}
+      <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screenContainer: {
     flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  container: {
-    padding: 24,
-    paddingBottom: 40,
+    backgroundColor: '#ECEFF1',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+    backgroundColor: '#06252E',
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 28) + 18 : 20,
+    paddingBottom: 54,
+    // Soft drop shadow under header
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    marginBottom: 24,
   },
-  brandName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.primary,
-    letterSpacing: 1.5,
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 2,
   },
-  logoutButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    backgroundColor: '#FFE4E6',
-  },
-  logoutText: {
-    color: '#E11D48',
-    fontSize: 13,
+  welcomeTitle: {
+    fontSize: 27,
     fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+    marginBottom: 6,
   },
-  profileCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+  subtitle: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#7F9FA9',
+    letterSpacing: 0.2,
   },
-  avatarContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E8EFF2',
+  centerSection: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 50,
   },
-  profileInfo: {
-    flex: 1,
-  },
-  welcomeLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    textTransform: 'capitalize',
-  },
-  userEmail: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  userPhone: {
-    fontSize: 12,
-    color: COLORS.primary,
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  statusCard: {
-    backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
+  gaugeContainer: {
+    width: 114,
+    height: 114,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 26,
   },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#16A34A',
-    marginRight: 12,
+  hourglassWrapper: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  statusTextContainer: {
-    flex: 1,
-  },
-  statusTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#166534',
-    marginBottom: 2,
-  },
-  statusSubtitle: {
-    fontSize: 12,
-    color: '#15803D',
-    lineHeight: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginBottom: 16,
-  },
-  servicesGrid: {
-    gap: 14,
-  },
-  serviceCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  serviceIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  serviceTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    marginBottom: 4,
-  },
-  serviceDesc: {
-    fontSize: 12.5,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
+  reviewText: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#708389',
+    letterSpacing: 0.2,
+    textAlign: 'center',
   },
 });

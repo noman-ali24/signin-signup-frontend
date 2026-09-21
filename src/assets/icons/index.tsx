@@ -220,3 +220,130 @@ export const GTTBadge: React.FC<{ size?: number }> = ({ size = 48 }) => (
     <Path d="M30 6V54M12 18H48M8 30H52M12 42H48" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
   </Svg>
 );
+
+// MOVCA Pin Logo with Car inside
+export const MovcaPinLogo: React.FC<{ size?: number; color?: string; carColor?: string }> = ({
+  size = 30,
+  color = '#FFFFFF',
+  carColor = '#06262F',
+}) => (
+  <Svg width={size} height={size * 1.22} viewBox="0 0 28 34" fill="none">
+    {/* Map Pin */}
+    <Path
+      d="M14 0C6.268 0 0 6.268 0 14c0 10.2 14 20 14 20s14-9.8 14-20C28 6.268 21.732 0 14 0z"
+      fill={color}
+    />
+    {/* Inner Contrasting Circle */}
+    <Circle cx="14" cy="13.5" r="9" fill={carColor} />
+    {/* Clean Car Silhouette */}
+    <Path
+      d="M9.5 14.2l.7-1.8c.2-.5.7-.8 1.3-.8h5c.6 0 1.1.3 1.3.8l.7 1.8h1c.5 0 .9.4.9.9v2.2c0 .2-.2.4-.4.4h-.5v.9c0 .3-.3.6-.6.6h-.8c-.3 0-.6-.3-.6-.6v-.9H10v.9c0 .3-.3.6-.6.6h-.8c-.3 0-.6-.3-.6-.6v-.9h-.5c-.2 0-.4-.2-.4-.4v-2.2c0-.5.4-.9.9-.9h1.5zm1.5-.6h6l-.4-1.1c-.1-.2-.4-.4-.6-.4h-4c-.2 0-.5.2-.6.4l-.4 1.1zm-.4 2.5c.4 0 .7-.3.7-.7s-.3-.7-.7-.7-.7.3-.7.7.3.7.7.7zm6.8 0c.4 0 .7-.3.7-.7s-.3-.7-.7-.7-.7.3-.7.7.3.7.7.7z"
+      fill={color}
+    />
+  </Svg>
+);
+
+// Hourglass Vector Icon for Account Review Status
+export const HourglassIcon: React.FC<{ size?: number; color?: string }> = ({
+  size = 34,
+  color = '#06262F',
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+    {/* Top and Bottom Caps */}
+    <Path d="M5 3.5H23" stroke={color} strokeWidth="2.6" strokeLinecap="round" />
+    <Path d="M5 24.5H23" stroke={color} strokeWidth="2.6" strokeLinecap="round" />
+    {/* Hourglass Curves */}
+    <Path
+      d="M7 4.5v3.6c0 2.6 1.8 4.9 4.3 5.5L14 14l-2.7.4C8.8 15 7 17.3 7 19.9v3.6"
+      stroke={color}
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <Path
+      d="M21 4.5v3.6c0 2.6-1.8 4.9-4.3 5.5L14 14l2.7.4c2.5.6 4.3 2.9 4.3 5.5v3.6"
+      stroke={color}
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    {/* Sand in top bulb */}
+    <Path d="M10 8.5h8l-4 4-4-4z" fill={color} />
+    {/* Sand in bottom bulb */}
+    <Path d="M9.5 22h9l-1.8-3.2h-5.4L9.5 22z" fill={color} />
+  </Svg>
+);
+
+// Bottom Navbar Home Icon
+export const NavHomeIcon: React.FC<{ size?: number; color?: string }> = ({
+  size = 24,
+  color = '#FFFFFF',
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path
+      d="M10.2 2.5a2.5 2.5 0 0 1 2.6 0l7.2 4.8A2.5 2.5 0 0 1 21 9.3V19a3 3 0 0 1-3 3h-3.2a1 1 0 0 1-1-1v-4.5a1.8 1.8 0 0 0-1.8-1.8h0a1.8 1.8 0 0 0-1.8 1.8V21a1 1 0 0 1-1 1H6a3 3 0 0 1-3-3V9.3a2.5 2.5 0 0 1 1-2l7.2-4.8z"
+      fill={color}
+    />
+  </Svg>
+);
+
+// Bottom Navbar Wallet Icon
+export const NavWalletIcon: React.FC<{ size?: number; color?: string }> = ({
+  size = 24,
+  color = '#82A2AA',
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    {/* Wallet Base */}
+    <Path
+      d="M19 6V5a2.5 2.5 0 0 0-2.5-2.5H5A3 3 0 0 0 2 5.5V18A3 3 0 0 0 5 21h11.5A2.5 2.5 0 0 0 19 18.5V17"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
+    {/* Flap with button clasp */}
+    <Path
+      d="M14.5 10.5H21a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-6.5a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2z"
+      fill={color}
+      stroke={color}
+      strokeWidth="0.5"
+    />
+    <Circle cx="18" cy="13.5" r="1.2" fill="#1C3840" />
+  </Svg>
+);
+
+// Bottom Navbar Document / Receipt Icon
+export const NavDocumentIcon: React.FC<{ size?: number; color?: string }> = ({
+  size = 24,
+  color = '#82A2AA',
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    {/* Receipt with jagged/wavy bottom */}
+    <Path
+      d="M5 3a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 19 3v18.5a.6.6 0 0 1-.9.5L15.5 20l-2.6 1.8a.6.6 0 0 1-.7 0L9.5 20l-2.6 1.8a.6.6 0 0 1-.9-.5V3z"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinejoin="round"
+    />
+    {/* Content lines */}
+    <Path
+      d="M8.5 7.5h7M8.5 11.5h7M8.5 15.5h4.5"
+      stroke={color}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
+// Bottom Navbar Profile / User Avatar Icon
+export const NavProfileIcon: React.FC<{ size?: number; color?: string }> = ({
+  size = 24,
+  color = '#82A2AA',
+}) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="7.5" r="4.5" fill={color} />
+    <Path
+      d="M4.2 20.2c0-4 3.5-7.2 7.8-7.2s7.8 3.2 7.8 7.2a.8.8 0 0 1-.8.8H5a.8.8 0 0 1-.8-.8z"
+      fill={color}
+    />
+  </Svg>
+);
