@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { ROUTES } from '../../constants/routes';
-import { BrandLogo, GTTBadge } from '../../assets/icons';
+import { BrandLogo, UserIcon } from '../../assets/icons';
 import { CustomButton } from '../../components/CustomButton';
 import Svg, {
   Defs,
@@ -203,16 +203,18 @@ export const SplashScreen: React.FC = () => {
             },
           ]}
         >
-          {/* Frosted Glass Supervision Badge */}
+          {/* Frosted Glass Developer Badge */}
           <View style={styles.supervisorCard}>
             <View style={styles.badgeWrapper}>
-              <GTTBadge size={44} />
+              <View style={styles.avatarCircle}>
+                <UserIcon size={22} color="#FFFFFF" />
+              </View>
             </View>
 
             <View style={styles.supervisorInfo}>
-              <Text style={styles.supervisorLabel}>POWERED & SUPERVISED BY</Text>
-              <Text style={styles.badgeCode}>GTT-US • GOLDEN TOUCH</Text>
-              <Text style={styles.badgeSubtitle}>TECHNOLOGY LLC</Text>
+              <Text style={styles.supervisorLabel}>DEVELOPED & CRAFTED BY</Text>
+              <Text style={styles.badgeCode}>NOMAN ALI</Text>
+              <Text style={styles.badgeSubtitle}>REACT NATIVE FULL STACK DEVELOPER</Text>
             </View>
           </View>
 
@@ -324,6 +326,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   badgeWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 229, 255, 0.15)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
