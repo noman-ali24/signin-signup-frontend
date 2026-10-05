@@ -11,6 +11,7 @@ export type RootStackParamList = {
   [ROUTES.SIGN_UP_TERMS]: undefined;
   [ROUTES.FORGOT_PASSWORD]: undefined;
   [ROUTES.HOME]: undefined;
+  [ROUTES.PROFILE]: undefined;
 };
 
 export type RootNavigationProp<T extends keyof RootStackParamList> =

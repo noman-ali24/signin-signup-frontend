@@ -12,7 +12,8 @@ import { PhoneScreen } from '../screens/auth/PhoneScreen';
 import { PasskeyScreen } from '../screens/auth/PasskeyScreen';
 import { TermsScreen } from '../screens/auth/TermsScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
-import { HomeScreen } from '../screens/app/HomeScreen';
+import { MainTabNavigator } from './MainTabNavigator';
+import { ProfileScreen } from '../screens/app/ProfileScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -41,7 +42,8 @@ export const RootNavigator: React.FC = () => {
         />
 
         {/* Protected App Flow */}
-        <Stack.Screen name={ROUTES.HOME} component={HomeScreen} />
+        <Stack.Screen name={ROUTES.HOME} component={MainTabNavigator} />
+        <Stack.Screen name={ROUTES.PROFILE} component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

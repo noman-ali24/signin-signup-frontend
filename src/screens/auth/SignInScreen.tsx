@@ -19,6 +19,11 @@ import { SocialLoginGroup } from '../../components/SocialButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { useAppDispatch } from '../../redux/hooks';
 import { loginSuccess } from '../../redux/slices/authSlice';
+import {
+  authService,
+  extractErrorMessage,
+  tokenStorage,
+} from '../../services';
 
 export const SignInScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -27,43 +32,66 @@ export const SignInScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
-    if (!email.trim()) {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
       newErrors.email = 'Please enter your email address';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       newErrors.email = 'Please enter a valid email address';
     }
+
     if (!password) {
       newErrors.password = 'Please enter your password';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
+    if (loading) return; // Prevent multiple clicks
+
+    setServerError(null);
     if (!validate()) return;
 
-    setLoading(true);
-    // Simulate API authentication
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      setLoading(true);
+
+      const { token, user } = await authService.signIn({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      // 1. Securely save token & user in AsyncStorage
+      await tokenStorage.saveAuthData(token, user);
+
+      // 2. Dispatch to Redux store
       dispatch(
         loginSuccess({
-          user: {
-            id: 'usr_101',
-            name: email.split('@')[0],
-            email: email,
-          },
-          token: 'jwt_mock_token_autopulse_2026',
+          user,
+          token,
         })
       );
-      navigation.replace(ROUTES.HOME);
-    }, 800);
+
+      // 3. Reset auth navigation stack and navigate to Home
+      navigation.reset({
+        index: 0,
+        routes: [{ name: ROUTES.HOME }],
+      });
+    } catch (err: any) {
+      const errorMessage = extractErrorMessage(err);
+      setServerError(errorMessage);
+      Alert.alert('Sign In Failed', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSocialLogin = (platform: string) => {
@@ -75,6 +103,13 @@ export const SignInScreen: React.FC = () => {
       <View style={styles.contentContainer}>
         <BrandHeader title="Sign In" subtitle="Car towing & transport app." />
 
+        {/* Server Error Banner */}
+        {serverError ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{serverError}</Text>
+          </View>
+        ) : null}
+
         {/* Input Fields */}
         <CustomInput
           label="Email Address"
@@ -82,6 +117,7 @@ export const SignInScreen: React.FC = () => {
           value={email}
           onChangeText={(text) => {
             setEmail(text);
+            if (serverError) setServerError(null);
             if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
           }}
           keyboardType="email-address"
@@ -95,6 +131,7 @@ export const SignInScreen: React.FC = () => {
           value={password}
           onChangeText={(text) => {
             setPassword(text);
+            if (serverError) setServerError(null);
             if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
           }}
           isPassword
@@ -150,6 +187,21 @@ const styles = StyleSheet.create({
   contentContainer: {
     width: '100%',
     justifyContent: 'center',
+  },
+  errorBanner: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#F87171',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    color: '#B91C1C',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
   },
   signInButton: {
     marginTop: 8,

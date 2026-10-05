@@ -25,10 +25,16 @@ import Svg, {
   G,
 } from 'react-native-svg';
 
+import { useAppDispatch } from '../../redux/hooks';
+import { loginSuccess } from '../../redux/slices/authSlice';
+import { tokenStorage } from '../../services';
+
 const { width, height } = Dimensions.get('window');
 
 export const SplashScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const dispatch = useAppDispatch();
+  const [hasExistingSession, setHasExistingSession] = React.useState(false);
 
   // Entrance animations for logo and content
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -36,6 +42,22 @@ export const SplashScreen: React.FC = () => {
   const slideUpAnim = useRef(new Animated.Value(24)).current;
 
   useEffect(() => {
+    // Check if token and user exist in AsyncStorage
+    const restoreSession = async () => {
+      try {
+        const token = await tokenStorage.getAuthToken();
+        const user = await tokenStorage.getStoredUser();
+        if (token && user) {
+          dispatch(loginSuccess({ token, user }));
+          setHasExistingSession(true);
+        }
+      } catch {
+        // Continue with normal guest flow
+      }
+    };
+
+    restoreSession();
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -54,10 +76,14 @@ export const SplashScreen: React.FC = () => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fadeAnim, scaleAnim, slideUpAnim]);
+  }, [fadeAnim, scaleAnim, slideUpAnim, dispatch]);
 
   const handleGetStarted = () => {
-    navigation.replace(ROUTES.SIGN_IN);
+    if (hasExistingSession) {
+      navigation.replace(ROUTES.HOME);
+    } else {
+      navigation.replace(ROUTES.SIGN_IN);
+    }
   };
 
   return (

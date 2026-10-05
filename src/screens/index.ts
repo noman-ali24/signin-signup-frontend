@@ -6,3 +6,6 @@ export * from './auth/PasskeyScreen';
 export * from './auth/TermsScreen';
 export * from './auth/ForgotPasswordScreen';
 export * from './app/HomeScreen';
+export * from './app/WalletScreen';
+export * from './app/OrdersScreen';
+export * from './app/ProfileScreen';

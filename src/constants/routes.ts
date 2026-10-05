@@ -7,6 +7,11 @@ export const ROUTES = {
   SIGN_UP_TERMS: 'SignUpTerms',
   FORGOT_PASSWORD: 'ForgotPassword',
   HOME: 'Home',
+  HOME_TAB: 'HomeTab',
+  WALLET: 'Wallet',
+  ORDERS: 'Orders',
+  PROFILE: 'Profile',
 } as const;
 
 export type RouteNames = typeof ROUTES[keyof typeof ROUTES];
+

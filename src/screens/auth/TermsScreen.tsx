@@ -18,6 +18,11 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setTermsAccepted, resetRegistration } from '../../redux/slices/registrationSlice';
 import { loginSuccess } from '../../redux/slices/authSlice';
+import {
+  authService,
+  extractErrorMessage,
+  tokenStorage,
+} from '../../services';
 
 export const TermsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -44,40 +49,46 @@ export const TermsScreen: React.FC = () => {
     );
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
+    if (loading) return; // Prevent multiple clicks
+
     if (!accepted) {
       setError('Please accept the Terms & Conditions to continue.');
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // Simulate API account creation
-    setTimeout(() => {
-      setLoading(false);
-
-      // Log in the newly registered user
-      dispatch(
-        loginSuccess({
-          user: {
-            id: 'usr_new_' + Date.now(),
-            name: registration.fullName || 'AutoPulse User',
-            email: registration.email || 'user@autopulse.app',
-            phone: registration.phoneNumber,
-          },
-          token: 'jwt_mock_token_reg_' + Date.now(),
-        })
-      );
+      const { token, user } = await authService.signUp({
+        fullName: registration.fullName.trim() || 'AutoPulse User',
+        email: registration.email.trim().toLowerCase(),
+        password: registration.password,
+      });
 
       // Reset temporary registration form state
       dispatch(resetRegistration());
 
-      // Navigate to Home Dashboard
-      navigation.reset({
-        index: 0,
-        routes: [{ name: ROUTES.HOME }],
-      });
-    }, 900);
+      // Notify user and navigate to Sign In screen
+      Alert.alert(
+        'Success',
+        'Your account has been created successfully! Please sign in.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate(ROUTES.SIGN_IN),
+          },
+        ]
+      );
+
+      navigation.navigate(ROUTES.SIGN_IN);
+    } catch (err: any) {
+      const errorMessage = extractErrorMessage(err);
+      setError(errorMessage);
+      Alert.alert('Sign Up Failed', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

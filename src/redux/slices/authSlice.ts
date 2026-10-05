@@ -2,7 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface UserProfile {
   id: string;
-  name: string;
+  fullName?: string;
+  name?: string;
   email: string;
   phone?: string;
 }
@@ -32,7 +33,13 @@ export const authSlice = createSlice({
       state,
       action: PayloadAction<{ user: UserProfile; token: string }>
     ) => {
-      state.user = action.payload.user;
+      const u = action.payload.user;
+      const displayName = u.fullName || u.name || '';
+      state.user = {
+        ...u,
+        fullName: displayName,
+        name: displayName,
+      };
       state.token = action.payload.token;
       state.isAuthenticated = true;
       state.isLoading = false;
