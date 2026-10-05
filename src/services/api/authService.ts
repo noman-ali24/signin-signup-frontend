@@ -85,14 +85,18 @@ export const authService = {
     const phoneVal = payload.phoneNumber || payload.phone || '';
     const requestData = {
       ...payload,
+      name: payload.fullName, // mapping for backend if it expects 'name'
+      fullName: payload.fullName,
       phone: phoneVal,
       phoneNumber: phoneVal,
     };
 
     console.log('🚀 [AUTH API] POST /api/auth/signup - Sending Payload:', {
-      fullName: payload.fullName,
-      email: payload.email,
-      phone: phoneVal,
+      fullName: requestData.fullName,
+      name: requestData.name,
+      email: requestData.email,
+      phone: requestData.phone,
+      password: requestData.password, // Added so you can verify it's sent
     });
 
     const response = await apiClient.post(API_ENDPOINTS.SIGN_UP, requestData);

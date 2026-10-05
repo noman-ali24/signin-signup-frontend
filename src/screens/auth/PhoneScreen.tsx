@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Animated, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -13,6 +13,8 @@ import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setPhoneData } from '../../redux/slices/registrationSlice';
 
+const { height } = Dimensions.get('window');
+
 export const PhoneScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
@@ -20,9 +22,28 @@ export const PhoneScreen: React.FC = () => {
 
   const [phoneNumber, setPhoneNumber] = useState(savedPhone);
   const [error, setError] = useState<string | undefined>();
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const validate = () => {
-    if (!phoneNumber.trim()) {
+    if (!phoneNumber || !phoneNumber.trim()) {
       setError('Please enter your phone number');
       return false;
     }
@@ -38,52 +59,70 @@ export const PhoneScreen: React.FC = () => {
     if (!validate()) return;
 
     dispatch(setPhoneData(phoneNumber));
-    navigation.navigate(ROUTES.SIGN_UP_PASSKEY);
+    navigation.navigate(ROUTES.SIGN_UP_NAME_EMAIL);
   };
 
   return (
     <ScreenWrapper contentContainerStyle={styles.screenContent}>
-      <View style={styles.contentContainer}>
-        <BrandHeader title="Phone Number" subtitle="Car towing & transport app." />
+      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        
+        <View style={styles.headerWrapper}>
+          <BrandHeader title="Phone Number" subtitle="Step 1: Your contact info" />
+        </View>
 
-        <CustomInput
-          label="Phone Number"
-          placeholder="+1 000 000 0000"
-          value={phoneNumber}
-          onChangeText={(text) => {
-            setPhoneNumber(text);
-            if (error) setError(undefined);
-          }}
-          keyboardType="phone-pad"
-          icon={<PhoneIcon size={20} color={COLORS.primary} />}
-          error={error}
-        />
+        <View style={styles.formContainer}>
+          <CustomInput
+            label="Phone Number"
+            placeholder="+1 000 000 0000"
+            value={phoneNumber}
+            onChangeText={(text) => {
+              setPhoneNumber(text);
+              if (error) setError(undefined);
+            }}
+            keyboardType="phone-pad"
+            icon={<PhoneIcon size={20} color={COLORS.primary} />}
+            error={error}
+          />
 
-        <View style={styles.bottomContainer}>
-          <CustomButton title="Next" onPress={handleNext} />
+          <View style={styles.bottomContainer}>
+            <CustomButton title="Next" onPress={handleNext} />
+          </View>
         </View>
 
         <View style={styles.footerContainer}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Text style={styles.backLink}>← Back</Text>
           </TouchableOpacity>
         </View>
-      </View>
+
+      </Animated.View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   screenContent: {
-    justifyContent: 'center',
-    paddingVertical: 24,
+    paddingVertical: height * 0.05,
   },
   contentContainer: {
     width: '100%',
-    justifyContent: 'center',
+  },
+  headerWrapper: {
+    marginBottom: 32,
+  },
+  formContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 24,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 3,
+    marginBottom: 32,
   },
   bottomContainer: {
     marginTop: 12,
@@ -91,7 +130,7 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 12,
     paddingBottom: 4,
   },
   backLink: {

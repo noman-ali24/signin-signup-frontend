@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Animated,
+  Dimensions,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -25,6 +27,8 @@ import {
   tokenStorage,
 } from '../../services';
 
+const { height } = Dimensions.get('window');
+
 export const SignInScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
@@ -32,8 +36,26 @@ export const SignInScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -56,9 +78,7 @@ export const SignInScreen: React.FC = () => {
   };
 
   const handleSignIn = async () => {
-    if (loading) return; // Prevent multiple clicks
-
-    setServerError(null);
+    if (loading) return; 
     if (!validate()) return;
 
     try {
@@ -69,10 +89,8 @@ export const SignInScreen: React.FC = () => {
         password,
       });
 
-      // 1. Securely save token & user in AsyncStorage
       await tokenStorage.saveAuthData(token, user);
-
-      // 2. Dispatch to Redux store
+      
       dispatch(
         loginSuccess({
           user,
@@ -80,159 +98,173 @@ export const SignInScreen: React.FC = () => {
         })
       );
 
-      // 3. Reset auth navigation stack and navigate to Home
       navigation.reset({
         index: 0,
         routes: [{ name: ROUTES.HOME }],
       });
     } catch (err: any) {
       const errorMessage = extractErrorMessage(err);
-      setServerError(errorMessage);
-      Alert.alert('Sign In Failed', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Sign In Failed',
+        text2: errorMessage,
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleSocialLogin = (platform: string) => {
-    Alert.alert(`${platform} Sign In`, `Proceeding with ${platform} authentication...`);
+    Toast.show({
+      type: 'info',
+      text1: `${platform} Sign In`,
+      text2: `Proceeding with ${platform} authentication...`,
+    });
   };
 
   return (
     <ScreenWrapper contentContainerStyle={styles.screenContent}>
-      <View style={styles.contentContainer}>
-        <BrandHeader title="Sign In" subtitle="Car towing & transport app." />
+      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        
+        <View style={styles.headerWrapper}>
+          <BrandHeader title="Welcome Back" subtitle="Sign in to continue your journey." />
+        </View>
 
-        {/* Server Error Banner */}
-        {serverError ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>{serverError}</Text>
-          </View>
-        ) : null}
+        <View style={styles.formContainer}>
+          <CustomInput
+            label="Email Address"
+            placeholder="Enter your email address"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+            }}
+            keyboardType="email-address"
+            icon={<MailIcon size={20} color={COLORS.primary} />}
+            error={errors.email}
+          />
 
-        {/* Input Fields */}
-        <CustomInput
-          label="Email Address"
-          placeholder="Enter your email address"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (serverError) setServerError(null);
-            if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
-          }}
-          keyboardType="email-address"
-          icon={<MailIcon size={20} color={COLORS.primary} />}
-          error={errors.email}
-        />
+          <CustomInput
+            label="Password"
+            placeholder="Enter your Password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+            }}
+            isPassword
+            icon={<LockIcon size={20} color={COLORS.primary} />}
+            error={errors.password}
+          />
 
-        <CustomInput
-          label="Password"
-          placeholder="Enter your Password"
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            if (serverError) setServerError(null);
-            if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-          }}
-          isPassword
-          icon={<LockIcon size={20} color={COLORS.primary} />}
-          error={errors.password}
-        />
+          <TouchableOpacity
+            onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}
+            style={styles.forgotPasswordButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+          </TouchableOpacity>
 
-        {/* Sign In Button */}
-        <CustomButton
-          title="Sign In"
-          onPress={handleSignIn}
-          loading={loading}
-          style={styles.signInButton}
-        />
+          <CustomButton
+            title="Sign In"
+            onPress={handleSignIn}
+            loading={loading}
+            style={styles.signInButton}
+          />
+        </View>
 
-        {/* Social Icons (Google, Facebook, Instagram) */}
+        <View style={styles.socialDivider}>
+          <View style={styles.line} />
+          <Text style={styles.orText}>Or continue with</Text>
+          <View style={styles.line} />
+        </View>
+
         <SocialLoginGroup
           onGooglePress={() => handleSocialLogin('Google')}
           onFacebookPress={() => handleSocialLogin('Facebook')}
           onInstagramPress={() => handleSocialLogin('Instagram')}
         />
 
-        {/* Bottom Links */}
         <View style={styles.footerContainer}>
-          <View style={styles.signupPromptRow}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate(ROUTES.SIGN_UP_STEP_1)}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-            >
-              <Text style={styles.signUpLink}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-
+          <Text style={styles.footerText}>Don't have an account? </Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate(ROUTES.FORGOT_PASSWORD)}
-            style={styles.forgotPasswordButton}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => navigation.navigate(ROUTES.SIGN_UP_STEP_1)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
-            <Text style={styles.forgotPasswordText}>Forgot your password?</Text>
+            <Text style={styles.signUpLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
-      </View>
+        
+      </Animated.View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   screenContent: {
-    justifyContent: 'center',
-    paddingVertical: 24,
+    paddingVertical: height * 0.05,
   },
   contentContainer: {
     width: '100%',
-    justifyContent: 'center',
   },
-  errorBanner: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#F87171',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
+  headerWrapper: {
+    marginBottom: 32,
   },
-  errorBannerText: {
-    color: '#B91C1C',
+  formContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 24,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 3,
+    marginBottom: 32,
+  },
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
     fontSize: 13,
-    fontWeight: '500',
-    lineHeight: 18,
+    color: COLORS.primary,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
   signInButton: {
     marginTop: 8,
   },
-  footerContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-    paddingBottom: 4,
-  },
-  signupPromptRow: {
+  socialDivider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  orText: {
+    marginHorizontal: 16,
+    color: '#9CA3AF',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  footerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 32,
   },
   footerText: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.textSecondary,
     fontWeight: '400',
   },
   signUpLink: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.primary,
     fontWeight: '700',
-  },
-  forgotPasswordButton: {
-    padding: 4,
-  },
-  forgotPasswordText: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: '600',
-    letterSpacing: 0.1,
   },
 });

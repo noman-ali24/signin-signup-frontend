@@ -5,24 +5,24 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { ROUTES } from '../../constants/routes';
 import { COLORS } from '../../constants/colors';
-import { LockIcon } from '../../assets/icons';
+import { UserIcon, MailIcon } from '../../assets/icons';
 import { BrandHeader } from '../../components/BrandHeader';
 import { CustomInput } from '../../components/CustomInput';
 import { CustomButton } from '../../components/CustomButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
-import { setPasskeyData } from '../../redux/slices/registrationSlice';
+import { setStep1Data } from '../../redux/slices/registrationSlice';
 
 const { height } = Dimensions.get('window');
 
-export const PasskeyScreen: React.FC = () => {
+export const NameEmailScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
   const registration = useAppSelector((state) => state.registration);
 
-  const [password, setPassword] = useState(registration.password || '');
-  const [confirmPassword, setConfirmPassword] = useState(registration.confirmPassword || '');
-  const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
+  const [fullName, setFullName] = useState(registration.fullName || '');
+  const [email, setEmail] = useState(registration.email || '');
+  const [errors, setErrors] = useState<{ fullName?: string; email?: string }>({});
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -44,17 +44,20 @@ export const PasskeyScreen: React.FC = () => {
   }, []);
 
   const validate = () => {
-    const newErrors: { password?: string; confirmPassword?: string } = {};
-    if (!password) {
-      newErrors.password = 'Please enter a password';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    const newErrors: { fullName?: string; email?: string } = {};
+    const trimmedName = fullName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
+      newErrors.fullName = 'Please enter your full name';
     }
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+
+    if (!trimmedEmail) {
+      newErrors.email = 'Please enter your email address';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      newErrors.email = 'Please enter a valid email address';
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -62,8 +65,13 @@ export const PasskeyScreen: React.FC = () => {
   const handleNext = () => {
     if (!validate()) return;
 
-    dispatch(setPasskeyData({ password, confirmPassword }));
-    navigation.navigate(ROUTES.SIGN_UP_TERMS);
+    dispatch(
+      setStep1Data({
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+      })
+    );
+    navigation.navigate(ROUTES.SIGN_UP_PASSKEY);
   };
 
   return (
@@ -71,36 +79,33 @@ export const PasskeyScreen: React.FC = () => {
       <Animated.View style={[styles.contentContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         
         <View style={styles.headerWrapper}>
-          <BrandHeader title="Set up Passkey" subtitle="Step 3: Secure your account" />
+          <BrandHeader title="Personal Info" subtitle="Step 2: Tell us about yourself" />
         </View>
 
         <View style={styles.formContainer}>
           <CustomInput
-            label="Password"
-            placeholder="Enter your Password"
-            value={password}
+            label="Full Name"
+            placeholder="Enter your full name"
+            value={fullName}
             onChangeText={(text) => {
-              setPassword(text);
-              if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+              setFullName(text);
+              if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: undefined }));
             }}
-            isPassword
-            icon={<LockIcon size={20} color={COLORS.primary} />}
-            error={errors.password}
+            icon={<UserIcon size={20} color={COLORS.primary} />}
+            error={errors.fullName}
           />
 
           <CustomInput
-            label="Confirm Password"
-            placeholder="Re-enter your Password"
-            value={confirmPassword}
+            label="Email Address"
+            placeholder="Enter your email"
+            value={email}
             onChangeText={(text) => {
-              setConfirmPassword(text);
-              if (errors.confirmPassword) {
-                setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-              }
+              setEmail(text);
+              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
             }}
-            isPassword
-            icon={<LockIcon size={20} color={COLORS.primary} />}
-            error={errors.confirmPassword}
+            keyboardType="email-address"
+            icon={<MailIcon size={20} color={COLORS.primary} />}
+            error={errors.email}
           />
 
           <View style={styles.bottomContainer}>
@@ -116,7 +121,6 @@ export const PasskeyScreen: React.FC = () => {
             <Text style={styles.backLink}>← Back</Text>
           </TouchableOpacity>
         </View>
-
       </Animated.View>
     </ScreenWrapper>
   );

@@ -9,6 +9,7 @@ import { SplashScreen } from '../screens/splash/SplashScreen';
 import { SignInScreen } from '../screens/auth/SignInScreen';
 import { SignUpScreen } from '../screens/auth/SignUpScreen';
 import { PhoneScreen } from '../screens/auth/PhoneScreen';
+import { NameEmailScreen } from '../screens/auth/NameEmailScreen';
 import { PasskeyScreen } from '../screens/auth/PasskeyScreen';
 import { TermsScreen } from '../screens/auth/TermsScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
@@ -34,6 +35,7 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen name={ROUTES.SIGN_IN} component={SignInScreen} />
         <Stack.Screen name={ROUTES.SIGN_UP_STEP_1} component={SignUpScreen} />
         <Stack.Screen name={ROUTES.SIGN_UP_PHONE} component={PhoneScreen} />
+        <Stack.Screen name={ROUTES.SIGN_UP_NAME_EMAIL} component={NameEmailScreen} />
         <Stack.Screen name={ROUTES.SIGN_UP_PASSKEY} component={PasskeyScreen} />
         <Stack.Screen name={ROUTES.SIGN_UP_TERMS} component={TermsScreen} />
         <Stack.Screen

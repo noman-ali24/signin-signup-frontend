@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -32,16 +32,12 @@ export const ForgotPasswordScreen: React.FC = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      Alert.alert(
-        'Reset Link Sent',
-        `A password recovery link has been sent to ${email}. Please check your inbox.`,
-        [
-          {
-            text: 'Back to Sign In',
-            onPress: () => navigation.navigate(ROUTES.SIGN_IN),
-          },
-        ]
-      );
+      Toast.show({
+        type: 'success',
+        text1: 'Reset Link Sent',
+        text2: `A password recovery link has been sent to ${email}. Please check your inbox.`,
+        onHide: () => navigation.navigate(ROUTES.SIGN_IN),
+      });
     }, 800);
   };
 

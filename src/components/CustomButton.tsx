@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TouchableOpacityProps,
   View,
+  Animated,
 } from 'react-native';
 import { ArrowRightIcon } from '../assets/icons';
 import { COLORS } from '../constants/colors';
@@ -24,10 +25,33 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   loading = false,
   disabled,
   style,
+  onPressIn,
+  onPressOut,
   ...touchableProps
 }) => {
   const isWhite = variant === 'white';
   const isOutline = variant === 'outline';
+  
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = (e: any) => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 20,
+    }).start();
+    if (onPressIn) onPressIn(e);
+  };
+
+  const handlePressOut = (e: any) => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      bounciness: 10,
+      speed: 20,
+    }).start();
+    if (onPressOut) onPressOut(e);
+  };
 
   const containerStyles = [
     styles.button,
@@ -46,51 +70,58 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
   const arrowColor = isWhite || isOutline ? COLORS.primary : COLORS.textWhite;
 
   return (
-    <TouchableOpacity
-      style={containerStyles}
-      activeOpacity={0.85}
-      disabled={disabled || loading}
-      {...touchableProps}
-    >
-      {loading ? (
-        <ActivityIndicator color={arrowColor} size="small" />
-      ) : (
-        <View style={styles.contentRow}>
-          <Text style={textStyles}>{title}</Text>
-          {showArrow ? (
-            <View style={styles.arrowWrapper}>
-              <ArrowRightIcon size={16} color={arrowColor} />
-            </View>
-          ) : null}
-        </View>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }], width: '100%' }}>
+      <TouchableOpacity
+        style={containerStyles}
+        activeOpacity={0.9}
+        disabled={disabled || loading}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        {...touchableProps}
+      >
+        {loading ? (
+          <ActivityIndicator color={arrowColor} size="small" />
+        ) : (
+          <View style={styles.contentRow}>
+            <Text style={textStyles}>{title}</Text>
+            {showArrow ? (
+              <View style={styles.arrowWrapper}>
+                <ArrowRightIcon size={18} color={arrowColor} />
+              </View>
+            ) : null}
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
     backgroundColor: COLORS.primary,
-    height: 52,
-    borderRadius: 26,
+    height: 56,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    shadowColor: COLORS.shadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   buttonWhite: {
     backgroundColor: COLORS.surfaceWhite,
-    shadowOpacity: 0.2,
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    elevation: 4,
   },
   buttonOutline: {
     backgroundColor: 'transparent',
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: COLORS.primary,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -102,16 +133,15 @@ const styles = StyleSheet.create({
   },
   text: {
     color: COLORS.textWhite,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
   textDark: {
     color: COLORS.primary,
-    fontWeight: '700',
   },
   arrowWrapper: {
-    marginLeft: 8,
+    marginLeft: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },

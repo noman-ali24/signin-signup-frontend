@@ -1,11 +1,6 @@
-import React, { useState } from 'react';
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View, Animated, Dimensions } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -17,12 +12,9 @@ import { CustomButton } from '../../components/CustomButton';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { setTermsAccepted, resetRegistration } from '../../redux/slices/registrationSlice';
-import { loginSuccess } from '../../redux/slices/authSlice';
-import {
-  authService,
-  extractErrorMessage,
-  tokenStorage,
-} from '../../services';
+import { authService, extractErrorMessage } from '../../services';
+
+const { height } = Dimensions.get('window');
 
 export const TermsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -32,6 +24,26 @@ export const TermsScreen: React.FC = () => {
   const [accepted, setAccepted] = useState(registration.termsAccepted);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const isSubmitting = useRef(false); // Synchronous lock for double-clicks
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleToggle = () => {
     setAccepted((prev) => {
@@ -43,63 +55,68 @@ export const TermsScreen: React.FC = () => {
   };
 
   const handleOpenTermsModal = () => {
-    Alert.alert(
-      'Terms & Conditions',
-      'By using AutoPulse, you agree to our standard terms of towing service, digital transport verification, road assistance dispatch rules, and privacy policy.'
-    );
+    Toast.show({
+      type: 'info',
+      text1: 'Terms & Conditions',
+      text2: 'By using AutoPulse, you agree to our standard terms of towing service.',
+    });
   };
 
   const handleSignUp = async () => {
-    if (loading) return; // Prevent multiple clicks
-
+    if (loading || isSubmitting.current) return; 
     if (!accepted) {
       setError('Please accept the Terms & Conditions to continue.');
       return;
     }
 
     try {
+      isSubmitting.current = true;
       setLoading(true);
 
-      const { token, user } = await authService.signUp({
+      const payload = {
         fullName: registration.fullName.trim() || 'AutoPulse User',
         email: registration.email.trim().toLowerCase(),
+        phoneNumber: registration.phoneNumber?.trim(),
         password: registration.password,
-      });
+      };
+      console.log('Signup Payload:', payload);
 
-      // Reset temporary registration form state
+      await authService.signUp(payload);
+
       dispatch(resetRegistration());
 
-      // Notify user and navigate to Sign In screen
-      Alert.alert(
-        'Success',
-        'Your account has been created successfully! Please sign in.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate(ROUTES.SIGN_IN),
-          },
-        ]
-      );
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Your account has been created successfully! Please sign in.',
+      });
 
       navigation.navigate(ROUTES.SIGN_IN);
     } catch (err: any) {
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
-      Alert.alert('Sign Up Failed', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Sign Up Failed',
+        text2: errorMessage,
+      });
     } finally {
+      isSubmitting.current = false;
       setLoading(false);
     }
   };
 
   return (
     <ScreenWrapper contentContainerStyle={styles.screenContent}>
-      <View style={styles.contentContainer}>
-        <BrandHeader title="Terms & Conditions" subtitle="Car towing & transport app." />
+      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        
+        <View style={styles.headerWrapper}>
+          <BrandHeader title="Terms & Conditions" subtitle="Step 4: Final step" />
+        </View>
 
-        <View style={styles.sectionContainer}>
+        <View style={styles.formContainer}>
           <Text style={styles.label}>Terms & Conditions</Text>
 
-          {/* Custom Checkbox Row */}
           <View style={styles.checkboxRow}>
             <TouchableOpacity
               style={[styles.checkbox, accepted && styles.checkboxActive]}
@@ -120,70 +137,74 @@ export const TermsScreen: React.FC = () => {
           </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
-        </View>
 
-        <View style={styles.bottomContainer}>
-          <CustomButton
-            title="Sign Up"
-            onPress={handleSignUp}
-            loading={loading}
-          />
+          <View style={styles.bottomContainer}>
+            <CustomButton
+              title="Sign Up"
+              onPress={handleSignUp}
+              loading={loading}
+              disabled={loading || !accepted}
+            />
+          </View>
         </View>
 
         <View style={styles.footerContainer}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           >
             <Text style={styles.backLink}>← Back</Text>
           </TouchableOpacity>
         </View>
-      </View>
+
+      </Animated.View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   screenContent: {
-    justifyContent: 'center',
-    paddingVertical: 24,
+    paddingVertical: height * 0.05,
   },
   contentContainer: {
     width: '100%',
-    justifyContent: 'center',
   },
-  sectionContainer: {
-    marginTop: 8,
-    width: '100%',
+  headerWrapper: {
+    marginBottom: 32,
+  },
+  formContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 24,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 3,
+    marginBottom: 32,
   },
   label: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: COLORS.textPrimary,
     marginBottom: 16,
-    paddingLeft: 4,
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 4,
+    marginBottom: 12,
   },
   checkbox: {
     width: 26,
     height: 26,
     borderRadius: 7,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
     borderWidth: 1.5,
     borderColor: '#D1D5DB',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    // Soft shadow
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 1,
   },
   checkboxActive: {
     backgroundColor: COLORS.primary,
@@ -205,7 +226,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 12,
     color: COLORS.error,
-    marginTop: 10,
     paddingLeft: 4,
   },
   bottomContainer: {
@@ -214,7 +234,7 @@ const styles = StyleSheet.create({
   },
   footerContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 12,
     paddingBottom: 4,
   },
   backLink: {

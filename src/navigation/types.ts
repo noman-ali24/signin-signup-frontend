@@ -7,6 +7,7 @@ export type RootStackParamList = {
   [ROUTES.SIGN_IN]: undefined;
   [ROUTES.SIGN_UP_STEP_1]: undefined;
   [ROUTES.SIGN_UP_PHONE]: undefined;
+  [ROUTES.SIGN_UP_NAME_EMAIL]: undefined;
   [ROUTES.SIGN_UP_PASSKEY]: undefined;
   [ROUTES.SIGN_UP_TERMS]: undefined;
   [ROUTES.FORGOT_PASSWORD]: undefined;

@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Animated,
+  Dimensions,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -27,6 +29,8 @@ import {
   extractErrorMessage,
 } from '../../services';
 
+const { height } = Dimensions.get('window');
+
 export const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dispatch = useAppDispatch();
@@ -37,13 +41,32 @@ export const SignUpScreen: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState(registrationState.phoneNumber || '');
   const [password, setPassword] = useState(registrationState.password || '');
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{
     fullName?: string;
     email?: string;
     phoneNumber?: string;
     password?: string;
   }>({});
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const isSubmitting = useRef(false); // Synchronous lock for double-clicks
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const validate = () => {
     const newErrors: {
@@ -84,247 +107,210 @@ export const SignUpScreen: React.FC = () => {
   };
 
   const handleSignUp = async () => {
-    if (loading) return; // Prevent multiple clicks
-
-    setServerError(null);
+    if (loading || isSubmitting.current) return; 
     if (!validate()) return;
 
     try {
+      isSubmitting.current = true;
       setLoading(true);
 
-      await authService.signUp({
+      const payload = {
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
         phoneNumber: phoneNumber.trim(),
         password,
-      });
+      };
+      console.log('Signup Payload:', payload);
 
-      // Reset input fields
+      await authService.signUp(payload);
+
       setFullName('');
       setEmail('');
       setPhoneNumber('');
       setPassword('');
 
-      // Notify user and navigate to Sign In screen
-      Alert.alert(
-        'Success',
-        'Your account has been created successfully! Please sign in.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate(ROUTES.SIGN_IN),
-          },
-        ]
-      );
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Your account has been created successfully! Please sign in.',
+        onHide: () => navigation.navigate(ROUTES.SIGN_IN),
+      });
 
       navigation.navigate(ROUTES.SIGN_IN);
     } catch (err: any) {
       const errorMessage = extractErrorMessage(err);
-      setServerError(errorMessage);
-      Alert.alert('Registration Failed', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: errorMessage,
+      });
     } finally {
+      isSubmitting.current = false;
       setLoading(false);
     }
   };
 
   const handleMultiStepFlow = () => {
-    const trimmedName = fullName.trim();
-    const trimmedEmail = email.trim();
-    const trimmedPhone = phoneNumber.trim();
-
-    const newErrors: { fullName?: string; email?: string } = {};
-    if (!trimmedName) newErrors.fullName = 'Please enter your full name';
-    if (!trimmedEmail) newErrors.email = 'Please enter your email address';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    dispatch(setStep1Data({ fullName: trimmedName, email: trimmedEmail }));
-    if (trimmedPhone) {
-      dispatch(setPhoneData(trimmedPhone));
-    }
-    if (password) {
-      dispatch(setPasskeyData({ password, confirmPassword: password }));
-    }
     navigation.navigate(ROUTES.SIGN_UP_PHONE);
   };
 
   return (
     <ScreenWrapper contentContainerStyle={styles.screenContent}>
-      <View style={styles.contentContainer}>
-        <BrandHeader title="Sign Up" subtitle="Car towing & transport app." />
+      <Animated.View style={[styles.contentContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        
+        <View style={styles.headerWrapper}>
+          <BrandHeader title="Create Account" subtitle="Join AutoPulse today." />
+        </View>
 
-        {/* Server Error Banner */}
-        {serverError ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorBannerText}>{serverError}</Text>
-          </View>
-        ) : null}
-
-        {/* Full Name Input */}
-        <CustomInput
-          label="Full Name"
-          placeholder="Enter your full name"
-          value={fullName}
-          onChangeText={(text) => {
-            setFullName(text);
-            if (serverError) setServerError(null);
-            if (errors.fullName) {
-              setErrors((prev) => ({ ...prev, fullName: undefined }));
-            }
-          }}
-          icon={<UserIcon size={20} color={COLORS.primary} />}
-          error={errors.fullName}
-        />
-
-        {/* Email Address Input */}
-        <CustomInput
-          label="Email Address"
-          placeholder="Enter your email"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (serverError) setServerError(null);
-            if (errors.email) {
-              setErrors((prev) => ({ ...prev, email: undefined }));
-            }
-          }}
-          keyboardType="email-address"
-          icon={<MailIcon size={20} color={COLORS.primary} />}
-          error={errors.email}
-        />
-
-        {/* Phone Number Input */}
-        <CustomInput
-          label="Phone Number"
-          placeholder="Enter your phone number (e.g. 03001234567)"
-          value={phoneNumber}
-          onChangeText={(text) => {
-            setPhoneNumber(text);
-            if (serverError) setServerError(null);
-            if (errors.phoneNumber) {
-              setErrors((prev) => ({ ...prev, phoneNumber: undefined }));
-            }
-          }}
-          keyboardType="phone-pad"
-          icon={<PhoneIcon size={20} color={COLORS.primary} />}
-          error={errors.phoneNumber}
-        />
-
-        {/* Password Input */}
-        <CustomInput
-          label="Password"
-          placeholder="Enter your password (min 6 characters)"
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            if (serverError) setServerError(null);
-            if (errors.password) {
-              setErrors((prev) => ({ ...prev, password: undefined }));
-            }
-          }}
-          isPassword
-          icon={<LockIcon size={20} color={COLORS.primary} />}
-          error={errors.password}
-        />
-
-        {/* Sign Up Primary Button */}
-        <View style={styles.bottomContainer}>
-          <CustomButton
-            title="Sign Up"
-            onPress={handleSignUp}
-            loading={loading}
-            disabled={loading}
+        <View style={styles.formContainer}>
+          <CustomInput
+            label="Full Name"
+            placeholder="Enter your full name"
+            value={fullName}
+            onChangeText={(text) => {
+              setFullName(text);
+              if (errors.fullName) {
+                setErrors((prev) => ({ ...prev, fullName: undefined }));
+              }
+            }}
+            icon={<UserIcon size={20} color={COLORS.primary} />}
+            error={errors.fullName}
           />
-        </View>
 
-        {/* Option to continue with multi-step onboarding */}
-        <TouchableOpacity
-          onPress={handleMultiStepFlow}
-          style={styles.wizardOptionButton}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.wizardOptionText}>
-            Or continue with step-by-step setup →
-          </Text>
-        </TouchableOpacity>
+          <CustomInput
+            label="Email Address"
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email) {
+                setErrors((prev) => ({ ...prev, email: undefined }));
+              }
+            }}
+            keyboardType="email-address"
+            icon={<MailIcon size={20} color={COLORS.primary} />}
+            error={errors.email}
+          />
 
-        {/* Footer Link to Sign In */}
-        <View style={styles.footerContainer}>
-          <View style={styles.promptRow}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate(ROUTES.SIGN_IN)}
-              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-            >
-              <Text style={styles.signInLink}>Sign In</Text>
-            </TouchableOpacity>
+          <CustomInput
+            label="Phone Number"
+            placeholder="Enter your phone number"
+            value={phoneNumber}
+            onChangeText={(text) => {
+              setPhoneNumber(text);
+              if (errors.phoneNumber) {
+                setErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+              }
+            }}
+            keyboardType="phone-pad"
+            icon={<PhoneIcon size={20} color={COLORS.primary} />}
+            error={errors.phoneNumber}
+          />
+
+          <CustomInput
+            label="Password"
+            placeholder="Enter password (min 6 chars)"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (errors.password) {
+                setErrors((prev) => ({ ...prev, password: undefined }));
+              }
+            }}
+            isPassword
+            icon={<LockIcon size={20} color={COLORS.primary} />}
+            error={errors.password}
+          />
+
+          <View style={styles.bottomContainer}>
+            <CustomButton
+              title="Sign Up"
+              onPress={handleSignUp}
+              loading={loading}
+              disabled={loading}
+            />
+            
+            <View style={{ height: 16 }} />
+
+            <CustomButton
+              title="Or try step-by-step setup"
+              variant="outline"
+              onPress={handleMultiStepFlow}
+              showArrow={true}
+            />
           </View>
         </View>
-      </View>
+
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerText}>Already have an account? </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate(ROUTES.SIGN_IN)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={styles.signInLink}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+
+      </Animated.View>
     </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   screenContent: {
-    justifyContent: 'center',
-    paddingVertical: 24,
+    paddingVertical: height * 0.05,
   },
   contentContainer: {
     width: '100%',
-    justifyContent: 'center',
   },
-  errorBanner: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#F87171',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
+  headerWrapper: {
+    marginBottom: 32,
   },
-  errorBannerText: {
-    color: '#B91C1C',
-    fontSize: 13,
-    fontWeight: '500',
-    lineHeight: 18,
+  formContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 24,
+    shadowColor: COLORS.shadowColor,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 20,
+    elevation: 3,
+    marginBottom: 32,
   },
   bottomContainer: {
-    marginTop: 8,
+    marginTop: 12,
     width: '100%',
   },
-  wizardOptionButton: {
-    marginTop: 14,
+  dividerWrapper: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    marginBottom: 24,
+    paddingHorizontal: 12,
+  },
+  line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
   },
   wizardOptionText: {
-    fontSize: 12,
+    marginHorizontal: 16,
     color: COLORS.primary,
+    fontSize: 13,
     fontWeight: '600',
   },
   footerContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-    paddingBottom: 4,
-  },
-  promptRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
   },
   footerText: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.textSecondary,
     fontWeight: '400',
   },
   signInLink: {
-    fontSize: 13,
+    fontSize: 14,
     color: COLORS.primary,
     fontWeight: '700',
   },
